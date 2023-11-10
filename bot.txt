@@ -1,0 +1,239 @@
+import disnake
+import os 
+import datetime
+from disnake.ext import commands
+import asyncio
+import youtube_dl
+from typing import Optional
+
+intents = disnake.Intents.all()
+
+bot = commands.Bot(command_prefix= "!", intents=intents)
+
+censored = ["niga","niger","нєгр","негр","ніга","нига","негрик","негар","нєгар"]
+
+log = []
+
+@bot.event
+async def on_ready():
+	print("Бот готовий до робити!")
+
+
+def is_moderator_role():
+    async def predicate(ctx):
+        return any(role.name == "Модератор" for role in ctx.author.roles)
+    return commands.check(predicate)
+
+
+@bot.event
+async def on_message(message):
+	embed = disnake.Embed(
+			title ="Повідомлення видалено",
+			description ="Такі слова заборонені",
+			color=disnake.Colour.red()
+        )
+	await bot.process_commands(message)
+	for content in message.content.split(","):
+		for censored_word in censored:
+			if content.lower() == censored_word:
+				await message.delete()
+				await message.channel.send(embed=embed)
+
+@bot.command()	
+async def tt(ctx):
+	await ctx.send("https://www.tiktok.com/@frizbyy0_0")
+
+@bot.slash_command()	
+async def tt(interaction):
+	await interaction.response.send_message("https://www.tiktok.com/@frizbyy0_0")
+
+
+
+@bot.command(description='Введіть !kick @member щоб вигнати учасника.')
+@commands.has_permissions(kick_members=True, administrator=True)
+async def kick(ctx, member: disnake.Member, *, reason= "Порушення правил." ):
+	channel = bot.get_channel(1107673176051302441)
+	embed = disnake.Embed(
+		title='Moderation',
+		description=f'**Модератор** {ctx.author.name}\n Вигнав користувача {member.name}\n **Причина:** {reason}',
+		color = disnake.Colour.red()
+		)
+	await channel.send(embed=embed)
+	await member.kick(reason=reason)
+	
+
+
+@bot.command()
+@commands.has_permissions(ban_members=True, administrator=True)
+async def ban(ctx, member: disnake.Member, *, reason= "Порушення правил." ):
+	channel = bot.get_channel(1107673176051302441)
+	embed = disnake.Embed(
+		title='Moderation',
+		description=f'**Модератор** {ctx.author.name}\n Забанив користувача {member.name}\n **Причина:** {reason}',
+		color = disnake.Colour.red()
+		)
+	await channel.send(embed=embed)
+	await member.ban(reason=reason)
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def rules(ctx):
+	embed = disnake.Embed(
+				title ="Правила",
+				description ='''
+
+**Пункт 1.**	Основна мова сервера - українська.Спілкування повинне бути лише цією мовою.(або суржик)
+
+Покарання Мут/10хв
+
+**Пункт 1.1**	Заборонений обман для власної вигоди.
+
+Покарання Kick
+
+**Пункт 1.2**	Заборонена будь-яка реклама, медійна діяльність без погодження адміністрації сервера.
+
+Покарання BAN 3days (видалення повідомлення)
+
+**Пункт 1.3**	Якщо ви підтримуєте війну і взагалі є росіянином, вас неодмінно покарають.
+
+Покарання BAN
+
+**Пункт 1.4**	Заборонено розповсюджувати власну інформацію людини без її дозволу.
+
+Покарання Kick
+
+** Пункт 1.5**	Заборонений надмірний КАПС.
+Покарання Mute/10хв
+
+
+**Пункт 1.6**
+Неактив 5+ днів в дс/грі = KICK
+
+				''',
+				color=disnake.Colour.green()
+			)
+	await ctx.send(embed=embed)
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def mod(ctx):
+	embed = disnake.Embed(
+		title ='Rules for personal',
+		description = '''
+**Пункт 1.1**	Порушення правил! **+1 попередження**
+
+**Пункт 1.2**	Конфлікти між персоналом **+1 кожному учаснику**
+
+**Пункт 1.3**	Використання команд в якості дуріння/власної вигоди = зняття з ролі()
+
+
+**3 попередження = зняття з ролі**
+					''',
+		color = disnake.Colour.red()
+		)
+	embed.set_image(url='https://emoji.discadia.com/emojis/301ec01b-8dee-4f6b-b003-88ec2e44e72c.png')
+	await ctx.send(embed=embed)
+
+
+@bot.command()
+async def ruless(ctx):
+	embed = disnake.Embed(
+		title="add",
+		description="Неактив 5+ днів в дс/грі = KICK",
+		color = disnake.Colour.blue()
+		)
+	await ctx.send(embed=embed)
+
+@bot.event
+async def on_member_join(member):
+	role_name = 'Ua'
+	role = disnake.utils.get(member.guild.roles, name=role_name)
+	if role is not None:
+		await member.add_roles(role)
+		channel_id = 1107668102235295774
+		channel = bot.get_channel(channel_id)
+		
+		if channel is not None:
+			await channel.send(f'Щойно було додано нового учасника серверу - {member.mention}')
+
+@bot.slash_command()
+async def ping(ctx):
+    await ctx.send('pong')
+
+
+@bot.event
+async def on_member_join(member):
+	role_name = 'UR'
+	role = disnake.utils.get(member.guild.roles, name=role_name)
+	if role is not None:
+		await member.add_roles(role)
+		embed = disnake.Embed(
+			title="Вітаємо нового учасника",
+			description=f"{member.name} Приєднався до серверу",
+			color=disnake.Colour.purple()
+			)
+		embed.set_image(url="https://emoji.discadia.com/emojis/d0d41823-5958-4d30-9c6f-7ad3aab30bac.gif")
+		channel_id = 1107668102235295774
+		channel = bot.get_channel(channel_id)
+		await channel.send(embed=embed)
+
+@bot.command()
+@commands.has_role("Модератор")
+async def clear(ctx, amount: int=5):
+	if ctx.author.guild_permissions.manage_messages:
+		await ctx.channel.purge(limit =amount +1)
+		await ctx.send("The chat has been cleared..", )
+	else:
+		await ctx.send(f"{ctx.author.mention}  У вас не достатньо прав на використання команди **!clear**")
+
+
+@bot.command()
+async def mute(ctx,member:disnake.Member, duration: int, reason='nothing'):
+	if ctx.author.guild_permissions.manage_roles:
+		mute_role=disnake.utils.get(ctx.guild.roles,name="Muted")
+
+		await member.add_roles(mute_role)
+		channel = bot.get_channel(1107673176051302441)
+		embed = disnake.Embed(
+			title='Moderation',
+			description=f'**Модератор : ** {ctx.author.name}\n **Заглушив користувача : ** {member.name}\n **Причина : ** {reason}',
+			color = disnake.Colour.red()
+			)
+		await channel.send(embed=embed)
+
+		await asyncio.sleep(duration * 60)
+
+		await member.remove_roles(mute_role)
+
+
+
+@bot.command()
+async def unmute(ctx,member:disnake.Member, reason='nothing'):
+	if ctx.author.guild_permissions.manage_roles:
+		mute_role= disnake.utils.get(ctx.guild.roles, name="Muted")
+
+	if mute_role in member.roles:
+		await member.remove_roles(mute_role)
+		channel = bot.get_channel(1107673176051302441)
+		embed = disnake.Embed(
+			title ='Moderation',
+			description=f'**Модератор :** {ctx.author.name}\n **Зняв заглушку з користувача : ** {member.name}\n**Причина :** {reason}',
+			color = disnake.Colour.blue()
+			)
+		await channel.send(embed=embed)
+
+
+@bot.command()
+async def count(ctx):
+	guild = ctx.guild
+	embed = disnake.Embed(
+		title='members info',
+		description=f'На сервері всього **{guild.member_count}** учасників',
+		color = disnake.Colour.green()
+		)
+	await ctx.send(embed=embed)
+
+
+bot.run("TOKEN")
